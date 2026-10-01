@@ -91,7 +91,7 @@ Configurations evaluated in both `vercel.json` and `public/_headers`:
 1. **Webhook Testing in Production:**
    - After deploying to Vercel, submit a test entry via the "Start a project" modal to verify your n8n workflow receives the payload and returns a `200 OK` status.
 2. **Environment Variable Configuration (Optional):**
-   - The webhook URL defaults to `https://arbazmulla.app.n8n.cloud/webhook/6ddbf314-95bf-4593-bc92-c45fb71bb08a`.
+   - The webhook URL defaults to `https://arbazmulla.app.n8n.cloud/webhook-test/6ddbf314-95bf-4593-bc92-c45fb71bb08a`.
    - If you ever change or rotate the webhook path, configure `VITE_BRIEF_WEBHOOK_URL` in your Vercel Project Settings without needing to edit source code.
 3. **Post-Deployment Verification:**
    - Once deployed online, submit your domain to [securityheaders.com](https://securityheaders.com) to verify live edge header delivery.
