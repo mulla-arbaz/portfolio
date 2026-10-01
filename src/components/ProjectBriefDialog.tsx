@@ -1,12 +1,20 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { ArrowUpRight, MenuIcon } from './Icons';
 
+const WEBHOOK_ENDPOINT =
+  import.meta.env.VITE_BRIEF_WEBHOOK_URL ||
+  'https://arbazmulla.app.n8n.cloud/webhook/6ddbf314-95bf-4593-bc92-c45fb71bb08a';
+
 export function ProjectBriefDialog() {
   const dialogRef = useRef<HTMLDialogElement>(null);
-  const [status, setStatus] = useState('');
+  const formRef = useRef<HTMLFormElement>(null);
+  const [status, setStatus] = useState<{ type: 'error' | 'success'; message: string } | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
 
   const openDialog = () => {
-    setStatus('');
+    setStatus(null);
+    setIsSuccess(false);
     dialogRef.current?.showModal();
   };
 
@@ -24,32 +32,66 @@ export function ProjectBriefDialog() {
     return () => dialog.removeEventListener('click', handleBackdrop);
   }, []);
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const form = new FormData(event.currentTarget);
+    if (isSubmitting) return;
+
+    const formElement = event.currentTarget;
+    const form = new FormData(formElement);
     const name = String(form.get('name') || '').trim();
     const email = String(form.get('email') || '').trim();
     const projectType = String(form.get('projectType') || '').trim();
     const message = String(form.get('message') || '').trim();
 
     if (!name || !email || !projectType || !message) {
-      setStatus('Please complete each field before opening the draft.');
+      setStatus({ type: 'error', message: 'Please complete each field before submitting.' });
       return;
     }
 
     const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailPattern.test(email)) {
-      setStatus('Please enter a valid email address.');
+      setStatus({ type: 'error', message: 'Please enter a valid email address.' });
       return;
     }
 
-    const contactEmail = String(import.meta.env.VITE_CONTACT_EMAIL || '').trim();
-    const subject = encodeURIComponent(`${projectType} enquiry from ${name}`);
-    const body = encodeURIComponent(
-      `Hi Arbaz,\n\nI’d like to discuss a ${projectType.toLowerCase()} project.\n\n${message}\n\nFrom: ${name}\nEmail: ${email}`,
-    );
-    window.location.href = `mailto:${contactEmail}?subject=${subject}&body=${body}`;
-    setStatus('Your email app should open with a prepared project brief.');
+    setIsSubmitting(true);
+    setStatus(null);
+
+    const payload = {
+      name,
+      email,
+      projectType,
+      message,
+      submittedAt: new Date().toISOString(),
+    };
+
+    try {
+      const response = await fetch(WEBHOOK_ENDPOINT, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Server returned status ${response.status}`);
+      }
+
+      setIsSuccess(true);
+      setStatus({
+        type: 'success',
+        message: 'Thank you! Your project brief has been sent successfully. I will get back to you shortly.',
+      });
+      formElement.reset();
+    } catch {
+      setStatus({
+        type: 'error',
+        message: 'Unable to send your brief right now. Please try again or reach out directly.',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -67,39 +109,91 @@ export function ProjectBriefDialog() {
         </div>
         <div className="brief-dialog__intro">
           <h2 id="brief-title">Tell me what you’re building.</h2>
-          <p>Complete a short brief and I’ll prepare it as a draft in your email app. Your details are not stored by this website.</p>
+          <p>Complete a short brief to send it directly. I’ll review your project details and get back to you shortly.</p>
         </div>
-        <form onSubmit={handleSubmit} noValidate>
-          <div className="form-grid">
+
+        {isSuccess ? (
+          <div className="brief-dialog__success" role="status">
+            <p className="form-status form-status--success">{status?.message}</p>
+            <div className="brief-dialog__actions">
+              <button
+                type="button"
+                className="button button--primary"
+                onClick={() => {
+                  setIsSuccess(false);
+                  setStatus(null);
+                }}
+              >
+                Send another brief
+              </button>
+              <button type="button" className="button button--text" onClick={closeDialog}>
+                Close
+              </button>
+            </div>
+          </div>
+        ) : (
+          <form ref={formRef} onSubmit={handleSubmit} noValidate>
+            <div className="form-grid">
+              <label>
+                Your name
+                <input
+                  name="name"
+                  autoComplete="name"
+                  required
+                  maxLength={80}
+                  placeholder="Name"
+                  disabled={isSubmitting}
+                />
+              </label>
+              <label>
+                Email address
+                <input
+                  name="email"
+                  type="email"
+                  autoComplete="email"
+                  required
+                  maxLength={120}
+                  placeholder="you@company.com"
+                  disabled={isSubmitting}
+                />
+              </label>
+            </div>
             <label>
-              Your name
-              <input name="name" autoComplete="name" required maxLength={80} placeholder="Name" />
+              Project type
+              <select name="projectType" defaultValue="" required disabled={isSubmitting}>
+                <option value="" disabled>Select a project type</option>
+                <option>New website</option>
+                <option>WordPress improvement</option>
+                <option>Frontend development</option>
+                <option>Performance optimization</option>
+              </select>
             </label>
             <label>
-              Email address
-              <input name="email" type="email" autoComplete="email" required maxLength={120} placeholder="you@company.com" />
+              A little about the project
+              <textarea
+                name="message"
+                rows={4}
+                required
+                maxLength={1200}
+                placeholder="Goals, timeline and what needs improving..."
+                disabled={isSubmitting}
+              />
             </label>
-          </div>
-          <label>
-            Project type
-            <select name="projectType" defaultValue="" required>
-              <option value="" disabled>Select a project type</option>
-              <option>New website</option>
-              <option>WordPress improvement</option>
-              <option>Frontend development</option>
-              <option>Performance optimization</option>
-            </select>
-          </label>
-          <label>
-            A little about the project
-            <textarea name="message" rows={4} required maxLength={1200} placeholder="Goals, timeline and what needs improving..." />
-          </label>
-          {status && <p className="form-status" role="status">{status}</p>}
-          <div className="brief-dialog__actions">
-            <button type="submit" className="button button--primary">Open email draft <ArrowUpRight /></button>
-            <button type="button" className="button button--text" onClick={closeDialog}>Cancel</button>
-          </div>
-        </form>
+            {status && (
+              <p className={`form-status form-status--${status.type}`} role="status">
+                {status.message}
+              </p>
+            )}
+            <div className="brief-dialog__actions">
+              <button type="submit" className="button button--primary" disabled={isSubmitting}>
+                {isSubmitting ? 'Sending...' : 'Send project brief'} <ArrowUpRight />
+              </button>
+              <button type="button" className="button button--text" onClick={closeDialog} disabled={isSubmitting}>
+                Cancel
+              </button>
+            </div>
+          </form>
+        )}
       </dialog>
     </>
   );
