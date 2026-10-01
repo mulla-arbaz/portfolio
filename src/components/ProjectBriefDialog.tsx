@@ -75,7 +75,9 @@ export function ProjectBriefDialog() {
       });
 
       if (!response.ok) {
-        throw new Error(`Server returned status ${response.status}`);
+        const errorData = await response.json().catch(() => null);
+        console.error('Webhook response error:', response.status, errorData);
+        throw new Error(errorData?.message || `Server returned status ${response.status}`);
       }
 
       setIsSuccess(true);
@@ -84,7 +86,8 @@ export function ProjectBriefDialog() {
         message: 'Thank you! Your project brief has been sent successfully. I will get back to you shortly.',
       });
       formElement.reset();
-    } catch {
+    } catch (error) {
+      console.error('Project brief submission failed:', error);
       setStatus({
         type: 'error',
         message: 'Unable to send your brief right now. Please try again or reach out directly.',
