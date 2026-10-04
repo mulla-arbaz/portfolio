@@ -46,7 +46,7 @@ A comprehensive pre-deployment security review was conducted on the Arbaz Mulla 
   - All dynamic data rendered by React is automatically HTML-escaped.
 - **Webhook Form Processing:**
   - In `src/components/ProjectBriefDialog.tsx`, submissions are sent via `fetch` POST to:
-    `https://arbazmulla.app.n8n.cloud/webhook/6ddbf314-95bf-4593-bc92-c45fb71bb08a`
+    `https://arbazmulla.app.n8n.cloud/webhook/prod-90909898-path`
   - **Input Validation:** Strict client-side validation enforces character limits (`maxLength`), required fields, and RFC 5322-compliant email regex (`/^[^\s@]+@[^\s@]+\.[^\s@]+$/`).
   - **Double-Submit Prevention:** Form inputs and submission buttons are disabled while `isSubmitting` is active, mitigating duplicate webhook triggers and race conditions.
   - **Payload Structure:** Sent strictly as a structured JSON object (`name`, `email`, `projectType`, `message`, `submittedAt`).
@@ -91,7 +91,7 @@ Configurations evaluated in both `vercel.json` and `public/_headers`:
 1. **Webhook Testing in Production:**
    - After deploying to Vercel, submit a test entry via the "Start a project" modal to verify your n8n workflow receives the payload and returns a `200 OK` status.
 2. **Environment Variable Configuration (Optional):**
-   - The webhook URL defaults to `https://arbazmulla.app.n8n.cloud/webhook/6ddbf314-95bf-4593-bc92-c45fb71bb08a`.
+   - The webhook URL defaults to `https://arbazmulla.app.n8n.cloud/webhook/prod-90909898-path`.
    - If you ever change or rotate the webhook path, configure `VITE_BRIEF_WEBHOOK_URL` in your Vercel Project Settings without needing to edit source code.
 3. **Post-Deployment Verification:**
    - Once deployed online, submit your domain to [securityheaders.com](https://securityheaders.com) to verify live edge header delivery.
