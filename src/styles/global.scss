@@ -1689,6 +1689,28 @@ p {
   box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.14);
 }
 
+.captcha-group {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.captcha-input-wrapper {
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+
+  input {
+    flex: 1;
+  }
+}
+
+.captcha-refresh-btn {
+  white-space: nowrap;
+  min-height: 3.25rem;
+  padding: 0 var(--space-4);
+  font-size: 0.8125rem;
+}
+
 .form-status {
   margin: 0;
   color: var(--color-error);
