@@ -11,28 +11,12 @@ export function ProjectBriefDialog() {
   const [status, setStatus] = useState<{ type: 'error' | 'success'; message: string } | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
-
-  // Math Captcha state
-  const [num1, setNum1] = useState(0);
-  const [num2, setNum2] = useState(0);
-  const [userCaptcha, setUserCaptcha] = useState('');
-
-  const generateCaptcha = () => {
-    const n1 = Math.floor(Math.random() * 9) + 1;
-    const n2 = Math.floor(Math.random() * 9) + 1;
-    setNum1(n1);
-    setNum2(n2);
-    setUserCaptcha('');
-  };
-
-  useEffect(() => {
-    generateCaptcha();
-  }, []);
+  const [isRobotChecked, setIsRobotChecked] = useState(false);
 
   const openDialog = () => {
     setStatus(null);
     setIsSuccess(false);
-    generateCaptcha();
+    setIsRobotChecked(false);
     dialogRef.current?.showModal();
   };
 
@@ -79,9 +63,8 @@ export function ProjectBriefDialog() {
       return;
     }
 
-    if (parseInt(userCaptcha.trim(), 10) !== num1 + num2) {
-      setStatus({ type: 'error', message: 'Incorrect captcha answer. Please try again.' });
-      generateCaptcha();
+    if (!isRobotChecked) {
+      setStatus({ type: 'error', message: 'Please confirm that you are not a robot.' });
       return;
     }
 
@@ -118,14 +101,13 @@ export function ProjectBriefDialog() {
         message: 'Thank you! Your project brief has been sent successfully. I will get back to you shortly.',
       });
       formElement.reset();
-      generateCaptcha();
+      setIsRobotChecked(false);
     } catch (error) {
       console.error('Project brief submission failed:', error);
       setStatus({
         type: 'error',
         message: 'Unable to send your brief right now. Please try again or reach out directly.',
       });
-      generateCaptcha();
     } finally {
       setIsSubmitting(false);
     }
@@ -159,7 +141,7 @@ export function ProjectBriefDialog() {
                 onClick={() => {
                   setIsSuccess(false);
                   setStatus(null);
-                  generateCaptcha();
+                  setIsRobotChecked(false);
                 }}
               >
                 Send another brief
@@ -231,30 +213,33 @@ export function ProjectBriefDialog() {
                 disabled={isSubmitting}
               />
             </label>
-            <div className="captcha-group">
-              <label htmlFor="captcha-input">
-                Security verification: What is {num1} + {num2}?
-              </label>
-              <div className="captcha-input-wrapper">
+            <div className="robot-captcha-card">
+              <label className="robot-captcha-checkbox-label" htmlFor="robot-verification">
                 <input
-                  id="captcha-input"
-                  name="captcha"
-                  type="number"
+                  id="robot-verification"
+                  name="robotVerification"
+                  type="checkbox"
+                  checked={isRobotChecked}
+                  onChange={(e) => setIsRobotChecked(e.target.checked)}
+                  disabled={isSubmitting}
                   required
-                  value={userCaptcha}
-                  onChange={(e) => setUserCaptcha(e.target.value)}
-                  placeholder="Enter answer"
-                  disabled={isSubmitting}
                 />
-                <button
-                  type="button"
-                  className="button button--secondary captcha-refresh-btn"
-                  onClick={generateCaptcha}
-                  disabled={isSubmitting}
-                  title="Refresh security question"
-                >
-                  Refresh
-                </button>
+                <span>I'm not a robot</span>
+              </label>
+              <div className="robot-captcha-badge" aria-hidden="true">
+                <svg viewBox="0 0 48 48" width="28" height="28">
+                  <path
+                    d="M24 4C12.95 4 4 12.95 4 24c0 4.14 1.27 8 3.43 11.2L10.3 33c-1.46-2.58-2.3-5.54-2.3-8.7 0-8.84 7.16-16 16-16 4.42 0 8.42 1.79 11.31 4.69l-4.69 4.69H42V6l-4.73 4.73C33.68 7.14 29.07 4 24 4z"
+                    fill="#1A73E8"
+                  />
+                  <path
+                    d="M44 24c0 11.05-8.95 20-20 20-4.14 0-8-1.27-11.2-3.43l2.2-2.87C17.58 39.16 20.54 40 23.7 40c8.84 0 16-7.16 16-16 0-4.42-1.79-8.42-4.69-11.31l4.69-4.69H28v11l4.73-4.73C36.32 17.68 44 21.07 44 24z"
+                    fill="#4285F4"
+                    opacity="0.8"
+                  />
+                </svg>
+                <span className="robot-captcha-badge-title">reCAPTCHA</span>
+                <span className="robot-captcha-badge-links">Privacy - Terms</span>
               </div>
             </div>
             {status && (
