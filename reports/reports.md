@@ -4,7 +4,7 @@
 **Date of Audit:** October 1, 2026 (Updated with Webhook Integration)  
 **Auditor:** Antigravity AI Code Assistant  
 **Deployment Target:** Vercel / Netlify / Static Host  
-**Webhook Integration:** n8n Cloud Webhook (`https://arbazmulla.app.n8n.cloud`)  
+**Webhook Integration:** n8n Cloud Webhook (`https://arbazm.app.n8n.cloud`)  
 **Overall Status:** PASSED (Production Ready)
 
 ---
@@ -46,7 +46,7 @@ A comprehensive pre-deployment security review was conducted on the Arbaz Mulla 
   - All dynamic data rendered by React is automatically HTML-escaped.
 - **Webhook Form Processing:**
   - In `src/components/ProjectBriefDialog.tsx`, submissions are sent via `fetch` POST to:
-    `https://arbazmulla.app.n8n.cloud/webhook/prod-90909898-path`
+    `https://arbazm.app.n8n.cloud/webhook/prod-90909898-path`
   - **Input Validation:** Strict client-side validation enforces character limits (`maxLength`), required fields, and RFC 5322-compliant email regex (`/^[^\s@]+@[^\s@]+\.[^\s@]+$/`).
   - **Double-Submit Prevention:** Form inputs and submission buttons are disabled while `isSubmitting` is active, mitigating duplicate webhook triggers and race conditions.
   - **Payload Structure:** Sent strictly as a structured JSON object (`name`, `email`, `projectType`, `message`, `submittedAt`).
@@ -58,7 +58,7 @@ Configurations evaluated in both `vercel.json` and `public/_headers`:
 
 | Header | Configured Value | Security Benefit |
 | :--- | :--- | :--- |
-| **Content-Security-Policy** | `default-src 'self'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://arbazmulla.app.n8n.cloud; media-src 'self'; manifest-src 'self'; object-src 'none'; frame-src 'none'; frame-ancestors 'none'; base-uri 'self'; form-action 'self' mailto:; upgrade-insecure-requests` | Restricts script execution to same-origin without unsafe-inline/eval. Disallows unauthorized font/style sources, blocks object embedding, clickjacking, enforces HTTPS, and strictly whitelists the n8n webhook domain under `connect-src`. |
+| **Content-Security-Policy** | `default-src 'self'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://arbazm.app.n8n.cloud; media-src 'self'; manifest-src 'self'; object-src 'none'; frame-src 'none'; frame-ancestors 'none'; base-uri 'self'; form-action 'self' mailto:; upgrade-insecure-requests` | Restricts script execution to same-origin without unsafe-inline/eval. Disallows unauthorized font/style sources, blocks object embedding, clickjacking, enforces HTTPS, and strictly whitelists the n8n webhook domain under `connect-src`. |
 | **Strict-Transport-Security (HSTS)** | `max-age=63072000; includeSubDomains; preload` | Enforces HTTPS for 2 years across all subdomains with preload eligibility. |
 | **X-Frame-Options** | `DENY` | Prevents the site from being rendered inside an `<iframe>`, preventing UI redressing / clickjacking attacks. |
 | **X-Content-Type-Options** | `nosniff` | Disables MIME sniffing, forcing browsers to respect declared Content-Types. |
@@ -70,7 +70,7 @@ Configurations evaluated in both `vercel.json` and `public/_headers`:
 | **X-Permitted-Cross-Domain-Policies** | `none` | Blocks Flash and PDF cross-domain policy access. |
 | **X-DNS-Prefetch-Control** | `off` | Prevents speculative DNS prefetching from leaking user intent. |
 
-- **Assessment:** Passed. Whitelists `https://arbazmulla.app.n8n.cloud` in `connect-src` while maintaining A+ CSP security.
+- **Assessment:** Passed. Whitelists `https://arbazm.app.n8n.cloud` in `connect-src` while maintaining A+ CSP security.
 
 ### 2.5 Reverse Tabnabbing & Hyperlink Security
 - Analyzed all `<a>` tags across the application.
@@ -91,7 +91,7 @@ Configurations evaluated in both `vercel.json` and `public/_headers`:
 1. **Webhook Testing in Production:**
    - After deploying to Vercel, submit a test entry via the "Start a project" modal to verify your n8n workflow receives the payload and returns a `200 OK` status.
 2. **Environment Variable Configuration (Optional):**
-   - The webhook URL defaults to `https://arbazmulla.app.n8n.cloud/webhook/prod-90909898-path`.
+   - The webhook URL defaults to `https://arbazm.app.n8n.cloud/webhook/prod-90909898-path`.
    - If you ever change or rotate the webhook path, configure `VITE_BRIEF_WEBHOOK_URL` in your Vercel Project Settings without needing to edit source code.
 3. **Post-Deployment Verification:**
    - Once deployed online, submit your domain to [securityheaders.com](https://securityheaders.com) to verify live edge header delivery.
