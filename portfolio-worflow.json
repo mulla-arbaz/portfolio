@@ -1,0 +1,378 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "544bebe6-57f8-4a4b-8576-66f0e6dcc49f",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "formTitle": "Enquiry Form",
+        "formDescription": "Enquiry from Website",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Your Name"
+            },
+            {
+              "fieldLabel": "Your Email",
+              "fieldType": "email"
+            },
+            {
+              "fieldLabel": "Project type",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "New Website"
+                  },
+                  {
+                    "option": "Performance Optimization"
+                  },
+                  {
+                    "option": "Wordpress improvement"
+                  },
+                  {
+                    "option": "Frontend development"
+                  }
+                ]
+              }
+            },
+            {
+              "fieldLabel": "A little more about project",
+              "fieldType": "textarea"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.6,
+      "position": [
+        0,
+        176
+      ],
+      "id": "66063950-92b1-49ff-b6fa-ee468347c6f4",
+      "name": "On form submission",
+      "webhookId": "8287e850-5c21-4678-b5f1-a4f13d2ad95c"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "prod-90909898-path",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        368
+      ],
+      "id": "d850529e-640c-4921-9c3e-c4f630ed36c9",
+      "name": "Webhook",
+      "webhookId": "6ddbf314-95bf-4593-bc92-c45fb71bb08a"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "705b2eee-b6e0-4448-b730-86dda4fe03ee",
+              "name": "Your Name",
+              "value": "={{ $json[\"Your Name\"] || $json.body.name }}",
+              "type": "string"
+            },
+            {
+              "id": "373269b5-a1de-4c32-816a-d760164b47d0",
+              "name": "Your Email",
+              "value": "={{ $json[\"Your Email\"] || $json.body.email}}",
+              "type": "string"
+            },
+            {
+              "id": "ba348c89-ec82-4ab6-9079-b738a42b453c",
+              "name": "Project type",
+              "value": "={{ $json[\"Project type\"] || $json.body.projectType }}",
+              "type": "string"
+            },
+            {
+              "id": "9ac545d2-3bc1-4339-b3f1-9d9309db5c16",
+              "name": "A little more about project",
+              "value": "={{ $json[\"A little more about project\"] || $json.body.message}}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        224,
+        176
+      ],
+      "id": "e66d1c6c-73e6-414c-94d4-8000f4828688",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1ZrdHNHJA_YUvlPK-fhpf_vFWfYTNclprjEFRVnrfRxM",
+          "mode": "list",
+          "cachedResultName": "Portfolio Leads",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ZrdHNHJA_YUvlPK-fhpf_vFWfYTNclprjEFRVnrfRxM/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ZrdHNHJA_YUvlPK-fhpf_vFWfYTNclprjEFRVnrfRxM/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Your Name": "={{ $json[\"Your Name\"] || $('Webhook').item.json.body.name}}",
+            "Your Email": "={{ $json[\"Your Email\"] || $('Webhook').item.json.body.email}}",
+            "Project Type": "={{ $json[\"Project type\"] || $('Webhook').item.json.body.projectType}}",
+            "More About Project": "={{ $json[\"A little more about project\"] || $('Webhook').item.json.body.message}}",
+            " Lead State": "={{ $json.emailStatus }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Your Name",
+              "displayName": "Your Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Your Email",
+              "displayName": "Your Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Project Type",
+              "displayName": "Project Type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "More About Project",
+              "displayName": "More About Project",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": " Lead State",
+              "displayName": " Lead State",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        672,
+        176
+      ],
+      "id": "a863a3ab-3d4c-4f2a-986c-c6abdb7b8698",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Z0rGCQt7vkgR4SMf",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "return items.map(item => {\n    // console.log(item.json['Your Email']);\n  const email = String(item.json['Your Email'] || '').trim().toLowerCase();\n  \n  const valid = email.includes('@gmail.com') ? `${/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)}` : '';\n  console.log(valid);\n  return {\n    json: {\n      ...item.json,\n      emailStatus: valid ? 'genuine' : 'fake',\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        464,
+        176
+      ],
+      "id": "b691a078-5455-4538-b0a2-c37f36e0b7cb",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{$json['Your Email']}}",
+        "subject": "=Your request has been recieved for {{ $json['Project Type'] }}",
+        "emailType": "text",
+        "message": "=Dear {{ $json['Your Name'] }},\n\nThank you for reaching out. Your enquiry has been successfully received, and I appreciate you taking the time to share your project requirements.\n\nI’ll review the details you provided and get back to you shortly with the next steps.\n\nI look forward to understanding your requirements and exploring how I can help bring your project to life with a modern, responsive, and professional web experience.\n\nBest regards,\nArbaz Mulla\nUI & Frontend Developer",
+        "options": {
+          "appendAttribution": false,
+          "senderName": "=Dental Buzz"
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        880,
+        144
+      ],
+      "id": "a2d0073c-05f7-422f-8eca-e9e8fbe89881",
+      "name": "User Message Email",
+      "webhookId": "639211e2-0f3e-46ff-8db5-e408e5eca9a7",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "2BsRmioELUiDw8jv",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "arbazmulla9619@gmail.com",
+        "subject": "New Project Enquiry Received — Action Required",
+        "message": "=<div style=\"padding:24px 28px; border-bottom:1px solid #e5e5e5;\"> <h2 style=\"margin:0; font-size:20px; font-weight:600;\"> New Project Enquiry </h2> <p style=\"margin:6px 0 0; font-size:13px; color:#777;\"> A new enquiry has been submitted through your portfolio. </p> </div> <!-- Lead Details --> <div style=\"padding:28px;\"> <p style=\"margin:0 0 20px; font-size:14px;\"> Hello Arbaz, </p> <table style=\"width:100%; border-collapse:collapse; font-size:14px;\"> <tr> <td style=\"padding:10px 0; color:#777; width:130px;\">Name</td> <td style=\"padding:10px 0; font-weight:600;\">{{$json['Your Name']}}</td> </tr> <tr> <td style=\"padding:10px 0; color:#777;\">Email</td> <td style=\"padding:10px 0;\">{{$json['Your Email']}}</td> </tr> <tr> <td style=\"padding:10px 0; color:#777;\">Project Type</td> <td style=\"padding:10px 0;\">{{$json['Project Type']}}</td> </tr> <tr> <td style=\"padding:10px 0; color:#777; vertical-align:top;\"> Project Brief </td> <td style=\"padding:10px 0; line-height:1.6;\"> {{$json['More About Project']}} </td> </tr> </table> <div style=\"margin-top:24px; padding-top:20px; border-top:1px solid #e5e5e5;\"> <p style=\"margin:0; font-size:13px; color:#777;\"> Please review the enquiry and follow up with the prospect at your earliest convenience. </p> </div> </div> <!-- Footer --> <div style=\"padding:18px 28px; background:#fafafa; border-top:1px solid #e5e5e5;\"> <p style=\"margin:0; font-size:12px; color:#999;\"> Automated notification from your portfolio contact form. </p> </div> </div>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        880,
+        336
+      ],
+      "id": "e2dc7388-f336-4bd6-a19d-620b0ccf59d7",
+      "name": "Admin Message Email",
+      "webhookId": "3d52e862-1c85-451b-97cf-8cef4ecd9427",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "2BsRmioELUiDw8jv",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Admin Message Email",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "User Message Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Admin Message Email": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "0933771e-0fd1-4269-b706-48beef7f6bec",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "9ac6aec179351c989514e7a074e3a429751f47b909d7864eb1fd12a9cfb195be"
+  },
+  "nodeGroups": [],
+  "id": "Dc5HglFUmixKIIZP",
+  "tags": []
+}

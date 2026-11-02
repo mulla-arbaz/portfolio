@@ -3,7 +3,7 @@ import { ArrowUpRight, MenuIcon } from './Icons';
 
 const WEBHOOK_ENDPOINT =
   import.meta.env.VITE_BRIEF_WEBHOOK_URL ||
-  'https://arbazm.app.n8n.cloud/webhook/prod-90909898-path';
+  'https://mullaarbaz.app.n8n.cloud/webhook/production-path';
 
 export function ProjectBriefDialog() {
   const dialogRef = useRef<HTMLDialogElement>(null);
