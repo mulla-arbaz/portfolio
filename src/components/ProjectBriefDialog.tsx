@@ -5,10 +5,10 @@ const WEBHOOK_ENDPOINT =
   import.meta.env.VITE_BRIEF_WEBHOOK_URL ||
   'https://mullaarbaz.app.n8n.cloud/webhook/production-path';
 
-// Official Google reCAPTCHA v2 Site Key (defaults to official Google test key for development/staging)
+// Official Google reCAPTCHA v2 Site Key
 const RECAPTCHA_SITE_KEY =
   import.meta.env.VITE_RECAPTCHA_SITE_KEY ||
-  '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI';
+  '6LfD0wwuAAAAABUVwrVuIkschpHdMF2cId8tdnE5';
 
 export function ProjectBriefDialog() {
   const dialogRef = useRef<HTMLDialogElement>(null);
