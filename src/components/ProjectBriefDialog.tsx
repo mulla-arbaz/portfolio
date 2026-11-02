@@ -8,7 +8,7 @@ const WEBHOOK_ENDPOINT =
 // Official Google reCAPTCHA v2 Site Key
 const RECAPTCHA_SITE_KEY =
   import.meta.env.VITE_RECAPTCHA_SITE_KEY ||
-  '6LfD0wwuAAAAABUVwrVuIkschpHdMF2cId8tdnE5';
+  '6LdL9wwuAAAAABX9ilXQ4Rpg2HX7CvT6Z63UMfb3';
 
 export function ProjectBriefDialog() {
   const dialogRef = useRef<HTMLDialogElement>(null);
