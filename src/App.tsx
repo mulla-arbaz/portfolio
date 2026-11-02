@@ -1,5 +1,6 @@
 import { Header } from './components/Header';
 import { ArrowDown, ArrowUpRight, CheckIcon, PlusIcon } from './components/Icons';
+import { Pricing } from './components/Pricing';
 import { ProjectBriefDialog } from './components/ProjectBriefDialog';
 import { ProjectCard } from './components/ProjectCard';
 import { Reveal } from './components/Reveal';
@@ -285,6 +286,7 @@ function Footer() {
           <a href="#about">About</a>
           <a href="#expertise">Expertise</a>
           <a href="#experience">Experience</a>
+          <a href="#pricing">Pricing</a>
         </nav>
         <a className="back-to-top" href="#top">Back to top <ArrowUpRight /></a>
       </div>
@@ -306,6 +308,7 @@ export default function App() {
         <About />
         <Expertise />
         <Experience />
+        <Pricing />
         <Contact />
       </main>
       <Footer />

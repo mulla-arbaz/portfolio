@@ -13,6 +13,7 @@ export const navItems = [
   { label: 'About', href: '#about' },
   { label: 'Expertise', href: '#expertise' },
   { label: 'Experience', href: '#experience' },
+  { label: 'Pricing', href: '#pricing' },
 ];
 
 export const projects: Project[] = [
@@ -159,5 +160,65 @@ export const faqs = [
   {
     question: 'Are you available for freelance projects?',
     answer: 'I’m open to selected freelance, contract and professional frontend opportunities.',
+  },
+];
+
+export type PricingPackage = {
+  id: string;
+  name: string;
+  price: string;
+  badge?: string;
+  idealFor: string;
+  features: string[];
+  ctaLabel: string;
+  popular?: boolean;
+};
+
+export const pricingPackages: PricingPackage[] = [
+  {
+    id: 'landing-page',
+    name: 'Landing Page Website',
+    price: '₹15,000',
+    idealFor: 'Ideal for individuals, startups and marketing campaigns.',
+    features: [
+      'Custom landing page design',
+      'Responsive development',
+      'Contact form integration',
+      'Basic SEO setup',
+      'Mobile and tablet optimization',
+    ],
+    ctaLabel: 'Get Started',
+  },
+  {
+    id: 'business-website',
+    name: 'Business Website',
+    price: '₹25,000',
+    popular: true,
+    badge: 'Popular',
+    idealFor: 'Ideal for small businesses, entrepreneurs and growing companies.',
+    features: [
+      'Multi-page business website',
+      'WordPress development',
+      'Responsive layouts',
+      'Contact form integration',
+      'Basic SEO setup',
+      'Performance optimization',
+    ],
+    ctaLabel: 'Get Started',
+  },
+  {
+    id: 'custom-website',
+    name: 'Custom Website',
+    price: '₹35,000',
+    idealFor: 'Ideal for businesses requiring tailored website experiences.',
+    features: [
+      'Custom UI/UX implementation',
+      'Advanced frontend development',
+      'Custom Gutenberg blocks and components',
+      'Third-party integrations',
+      'Advanced functionality based on requirements',
+      'Performance optimization',
+    ],
+    ctaLabel: 'Discuss Your Project',
   },
 ];

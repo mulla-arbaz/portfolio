@@ -5,18 +5,34 @@ const WEBHOOK_ENDPOINT =
   import.meta.env.VITE_BRIEF_WEBHOOK_URL ||
   'https://mullaarbaz.app.n8n.cloud/webhook/production-path';
 
+// Official Google reCAPTCHA v2 Site Key (defaults to official Google test key for development/staging)
+const RECAPTCHA_SITE_KEY =
+  import.meta.env.VITE_RECAPTCHA_SITE_KEY ||
+  '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI';
+
 export function ProjectBriefDialog() {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
+  const recaptchaContainerRef = useRef<HTMLDivElement>(null);
+  const widgetIdRef = useRef<number | null>(null);
+
   const [status, setStatus] = useState<{ type: 'error' | 'success'; message: string } | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
-  const [isRobotChecked, setIsRobotChecked] = useState(false);
+  const [recaptchaToken, setRecaptchaToken] = useState('');
+  const [isRecaptchaLoading, setIsRecaptchaLoading] = useState(true);
 
   const openDialog = () => {
     setStatus(null);
     setIsSuccess(false);
-    setIsRobotChecked(false);
+    setRecaptchaToken('');
+    if (widgetIdRef.current !== null && window.grecaptcha) {
+      try {
+        window.grecaptcha.reset(widgetIdRef.current);
+      } catch (err) {
+        console.warn('reCAPTCHA reset:', err);
+      }
+    }
     dialogRef.current?.showModal();
   };
 
@@ -34,6 +50,80 @@ export function ProjectBriefDialog() {
     return () => dialog.removeEventListener('click', handleBackdrop);
   }, []);
 
+  // Initialize official Google reCAPTCHA v2 widget
+  useEffect(() => {
+    if (isSuccess) return;
+
+    let isMounted = true;
+
+    const renderWidget = () => {
+      if (!isMounted || !recaptchaContainerRef.current) return;
+      if (recaptchaContainerRef.current.hasChildNodes()) {
+        setIsRecaptchaLoading(false);
+        return;
+      }
+
+      if (window.grecaptcha && typeof window.grecaptcha.render === 'function') {
+        try {
+          const id = window.grecaptcha.render(recaptchaContainerRef.current, {
+            sitekey: RECAPTCHA_SITE_KEY,
+            callback: (token: string) => {
+              if (isMounted) {
+                setRecaptchaToken(token);
+                setStatus((current) =>
+                  current?.type === 'error' && current.message.toLowerCase().includes('recaptcha')
+                    ? null
+                    : current,
+                );
+              }
+            },
+            'expired-callback': () => {
+              if (isMounted) setRecaptchaToken('');
+            },
+            'error-callback': () => {
+              if (isMounted) setRecaptchaToken('');
+            },
+          });
+          widgetIdRef.current = id;
+          if (isMounted) setIsRecaptchaLoading(false);
+        } catch (err) {
+          console.warn('reCAPTCHA render error:', err);
+          if (isMounted) setIsRecaptchaLoading(false);
+        }
+      }
+    };
+
+    if (window.grecaptcha && typeof window.grecaptcha.render === 'function') {
+      if (window.grecaptcha.ready) {
+        window.grecaptcha.ready(renderWidget);
+      } else {
+        renderWidget();
+      }
+    } else {
+      const checkInterval = setInterval(() => {
+        if (window.grecaptcha && typeof window.grecaptcha.render === 'function') {
+          clearInterval(checkInterval);
+          renderWidget();
+        }
+      }, 150);
+
+      const timeout = setTimeout(() => {
+        clearInterval(checkInterval);
+        if (isMounted) setIsRecaptchaLoading(false);
+      }, 6000);
+
+      return () => {
+        isMounted = false;
+        clearInterval(checkInterval);
+        clearTimeout(timeout);
+      };
+    }
+
+    return () => {
+      isMounted = false;
+    };
+  }, [isSuccess]);
+
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (isSubmitting) return;
@@ -41,19 +131,14 @@ export function ProjectBriefDialog() {
     const formElement = event.currentTarget;
     const form = new FormData(formElement);
     const name = String(form.get('name') || '').trim();
-    const phone = String(form.get('phone') || '').trim();
     const email = String(form.get('email') || '').trim();
     const projectType = String(form.get('projectType') || '').trim();
-    const message = String(form.get('message') || '').trim();
+    const details = String(form.get('details') || '').trim();
+    const budget = String(form.get('budget') || '').trim();
+    const timeline = String(form.get('timeline') || '').trim();
 
-    if (!name || !phone || !email || !projectType || !message) {
-      setStatus({ type: 'error', message: 'Please complete each field before submitting.' });
-      return;
-    }
-
-    const phonePattern = /^[+\d\s()-]{7,20}$/;
-    if (!phonePattern.test(phone)) {
-      setStatus({ type: 'error', message: 'Please enter a valid mobile number.' });
+    if (!name || !email || !projectType || !details) {
+      setStatus({ type: 'error', message: 'Please complete all required fields before submitting.' });
       return;
     }
 
@@ -63,21 +148,48 @@ export function ProjectBriefDialog() {
       return;
     }
 
-    if (!isRobotChecked) {
-      setStatus({ type: 'error', message: 'Please confirm that you are not a robot.' });
+    if (!recaptchaToken) {
+      setStatus({ type: 'error', message: 'Please complete the reCAPTCHA verification before submitting.' });
       return;
     }
 
     setIsSubmitting(true);
     setStatus(null);
 
+    // Build formatted message including project details and optional budget/timeline
+    // This ensures full visibility in existing Google Sheets and email notifications
+    const messageParts = [details];
+    if (budget) {
+      messageParts.push(`Estimated Budget: ${budget}`);
+    }
+    if (timeline) {
+      messageParts.push(`Expected Timeline: ${timeline}`);
+    }
+    const formattedMessage = messageParts.join('\n\n');
+
     const payload = {
       name,
-      phone,
       email,
       projectType,
-      message,
+      message: formattedMessage,
+      details,
+      budget: budget || 'Not specified',
+      timeline: timeline || 'Not specified',
       submittedAt: new Date().toISOString(),
+      recaptchaToken,
+      'g-recaptcha-response': recaptchaToken,
+      fullName: name,
+      emailAddress: email,
+      projectDetails: details,
+      estimatedBudget: budget || 'Not specified',
+      expectedTimeline: timeline || 'Not specified',
+      'Your Name': name,
+      'Your Email': email,
+      'Project Type': projectType,
+      'Project Details': details,
+      'Estimated Budget': budget || 'Not specified',
+      'Expected Timeline': timeline || 'Not specified',
+      'A little more about project': formattedMessage,
     };
 
     try {
@@ -101,13 +213,21 @@ export function ProjectBriefDialog() {
         message: 'Thank you! Your project brief has been sent successfully. I will get back to you shortly.',
       });
       formElement.reset();
-      setIsRobotChecked(false);
+      setRecaptchaToken('');
     } catch (error) {
       console.error('Project brief submission failed:', error);
       setStatus({
         type: 'error',
         message: 'Unable to send your brief right now. Please try again or reach out directly.',
       });
+      if (widgetIdRef.current !== null && window.grecaptcha) {
+        try {
+          window.grecaptcha.reset(widgetIdRef.current);
+          setRecaptchaToken('');
+        } catch (err) {
+          console.warn('reCAPTCHA reset failed:', err);
+        }
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -141,7 +261,7 @@ export function ProjectBriefDialog() {
                 onClick={() => {
                   setIsSuccess(false);
                   setStatus(null);
-                  setIsRobotChecked(false);
+                  setRecaptchaToken('');
                 }}
               >
                 Send another brief
@@ -155,98 +275,98 @@ export function ProjectBriefDialog() {
           <form ref={formRef} onSubmit={handleSubmit} noValidate>
             <div className="form-grid">
               <label>
-                Your name
+                <span>Full Name <span className="field-required" aria-hidden="true">*</span></span>
                 <input
                   name="name"
                   autoComplete="name"
                   required
                   maxLength={80}
-                  placeholder="Name"
+                  placeholder="Your name"
                   disabled={isSubmitting}
                 />
               </label>
               <label>
-                Mobile number
-                <input
-                  name="phone"
-                  type="tel"
-                  autoComplete="tel"
-                  required
-                  maxLength={20}
-                  placeholder="+91 98765 43210"
-                  disabled={isSubmitting}
-                />
-              </label>
-            </div>
-            <div className="form-grid">
-              <label>
-                Email address
+                <span>Email Address <span className="field-required" aria-hidden="true">*</span></span>
                 <input
                   name="email"
                   type="email"
                   autoComplete="email"
                   required
                   maxLength={120}
-                  placeholder="you@company.com"
+                  placeholder="you@example.com"
                   disabled={isSubmitting}
                 />
               </label>
+            </div>
+
+            <label>
+              <span>Project Type <span className="field-required" aria-hidden="true">*</span></span>
+              <select name="projectType" defaultValue="" required disabled={isSubmitting}>
+                <option value="" disabled>Select project type</option>
+                <option value="Landing Page Development">Landing Page Development</option>
+                <option value="Business Website Development">Business Website Development</option>
+                <option value="Custom Website Development">Custom Website Development</option>
+                <option value="WordPress Development">WordPress Development</option>
+                <option value="Website Redesign">Website Redesign</option>
+                <option value="Website Maintenance & Support">Website Maintenance & Support</option>
+                <option value="Frontend Development (React)">Frontend Development (React)</option>
+                <option value="Figma to Website Development">Figma to Website Development</option>
+                <option value="Other / Not Sure Yet">Other / Not Sure Yet</option>
+              </select>
+            </label>
+
+            <div className="form-grid">
               <label>
-                Project type
-                <select name="projectType" defaultValue="" required disabled={isSubmitting}>
-                  <option value="" disabled>Select a project type</option>
-                  <option>New website</option>
-                  <option>WordPress improvement</option>
-                  <option>Frontend development</option>
-                  <option>Performance optimization</option>
+                <span>Estimated Budget <span className="field-optional">(Optional)</span></span>
+                <select name="budget" defaultValue="" disabled={isSubmitting}>
+                  <option value="">Select estimated budget</option>
+                  <option value="₹15,000 – ₹25,000">₹15,000 – ₹25,000</option>
+                  <option value="₹25,000 – ₹50,000">₹25,000 – ₹50,000</option>
+                  <option value="₹50,000 – ₹1,00,000">₹50,000 – ₹1,00,000</option>
+                  <option value="₹1,00,000+">₹1,00,000+</option>
+                  <option value="Not Sure Yet">Not Sure Yet</option>
+                </select>
+              </label>
+              <label>
+                <span>Expected Timeline <span className="field-optional">(Optional)</span></span>
+                <select name="timeline" defaultValue="" disabled={isSubmitting}>
+                  <option value="">Select expected timeline</option>
+                  <option value="Immediately">Immediately</option>
+                  <option value="Within 1–2 Weeks">Within 1–2 Weeks</option>
+                  <option value="Within 1 Month">Within 1 Month</option>
+                  <option value="Within 2–3 Months">Within 2–3 Months</option>
+                  <option value="Just Exploring">Just Exploring</option>
                 </select>
               </label>
             </div>
+
             <label>
-              A little about the project
+              <span>Project Details <span className="field-required" aria-hidden="true">*</span></span>
               <textarea
-                name="message"
+                name="details"
                 rows={4}
                 required
-                maxLength={1200}
-                placeholder="Goals, timeline and what needs improving..."
+                maxLength={1500}
+                placeholder="Tell me a little about your project, goals, required features or any reference websites you have in mind..."
                 disabled={isSubmitting}
               />
             </label>
-            <div className="robot-captcha-card">
-              <label className="robot-captcha-checkbox-label" htmlFor="robot-verification">
-                <input
-                  id="robot-verification"
-                  name="robotVerification"
-                  type="checkbox"
-                  checked={isRobotChecked}
-                  onChange={(e) => setIsRobotChecked(e.target.checked)}
-                  disabled={isSubmitting}
-                  required
-                />
-                <span>I'm not a robot</span>
-              </label>
-              <div className="robot-captcha-badge" aria-hidden="true">
-                <svg viewBox="0 0 48 48" width="28" height="28">
-                  <path
-                    d="M24 4C12.95 4 4 12.95 4 24c0 4.14 1.27 8 3.43 11.2L10.3 33c-1.46-2.58-2.3-5.54-2.3-8.7 0-8.84 7.16-16 16-16 4.42 0 8.42 1.79 11.31 4.69l-4.69 4.69H42V6l-4.73 4.73C33.68 7.14 29.07 4 24 4z"
-                    fill="#1A73E8"
-                  />
-                  <path
-                    d="M44 24c0 11.05-8.95 20-20 20-4.14 0-8-1.27-11.2-3.43l2.2-2.87C17.58 39.16 20.54 40 23.7 40c8.84 0 16-7.16 16-16 0-4.42-1.79-8.42-4.69-11.31l4.69-4.69H28v11l4.73-4.73C36.32 17.68 44 21.07 44 24z"
-                    fill="#4285F4"
-                    opacity="0.8"
-                  />
-                </svg>
-                <span className="robot-captcha-badge-title">reCAPTCHA</span>
-                <span className="robot-captcha-badge-links">Privacy - Terms</span>
-              </div>
+
+            <div className="recaptcha-wrapper" aria-label="Google reCAPTCHA verification">
+              <div ref={recaptchaContainerRef} />
+              {isRecaptchaLoading && (
+                <div className="recaptcha-loading">
+                  <span>Loading reCAPTCHA verification...</span>
+                </div>
+              )}
             </div>
+
             {status && (
               <p className={`form-status form-status--${status.type}`} role="status">
                 {status.message}
               </p>
             )}
+
             <div className="brief-dialog__actions">
               <button type="submit" className="button button--primary" disabled={isSubmitting}>
                 {isSubmitting ? 'Sending...' : 'Send project brief'} <ArrowUpRight />
@@ -261,6 +381,3 @@ export function ProjectBriefDialog() {
     </>
   );
 }
-
-
-
